@@ -77,7 +77,7 @@ impl BaseCargoCommand {
                 let compile_opts = self.to_compile_opts(&cargo_config)?;
 
                 let compilation = cargo::ops::compile(&workspace, &compile_opts)
-                    .context("failed to compile using cargo")?;
+                    .context("failed to compile the plugin using cargo")?;
 
                 let dylibs = compilation
                     .cdylibs
