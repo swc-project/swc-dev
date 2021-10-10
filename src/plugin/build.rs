@@ -95,6 +95,8 @@ impl BaseCargoCommand {
     }
 
     pub async fn run(self) -> Result<Vec<PathBuf>, Error> {
+        info!("Building swc plugin using cargo");
+
         spawn_blocking(move || self.run_sync())
             .await
             .context("failed to await")?
