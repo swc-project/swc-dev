@@ -30,9 +30,7 @@ impl PluginCommand {
                     .context("failed to initialize a plugin project")?;
             }
             PluginCommand::Build(cmd) => {
-                cmd.run()
-                    .await
-                    .context("failed to build a plugin project")?;
+                cmd.run().await?;
             }
             PluginCommand::Package(_) => todo!(),
             PluginCommand::Publish(_) => todo!(),

@@ -5,10 +5,12 @@ use cargo::{
     util::{important_paths, interning::InternedString},
     Config,
 };
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 use structopt::StructOpt;
 use tokio::task::spawn_blocking;
 use tracing::{info, subscriber::with_default};
+
+use crate::util::cargo::cargo_target_dir;
 
 /// Used for commands involving `cargo build`
 
@@ -95,7 +97,13 @@ impl BaseCargoCommand {
     }
 
     pub async fn run(self) -> Result<Vec<PathBuf>, Error> {
-        info!("Building swc plugin using cargo");
+        let dir = env::current_dir()?;
+        let target_dir = cargo_target_dir(&dir).await?;
+        let target_dir_str = target_dir.to_string_lossy();
+        info!(
+            target_dir = &*target_dir_str,
+            "Building swc plugin using cargo"
+        );
 
         spawn_blocking(move || self.run_sync())
             .await
