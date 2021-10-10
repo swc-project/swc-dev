@@ -1,4 +1,7 @@
 [workspace]
+members = [
+  "templates/new-plugin",
+]
 
 [package]
 authors = ["강동윤 <kdy1997.dev@gmail.com>"]
@@ -19,7 +22,7 @@ cargo-edit = "0.8.0"
 cargo_metadata = "0.14.0"
 clap = "2.33.3"
 structopt = "0.3.21"
-swc_node_arch = { path = "./arch/" }
+swc_node_arch = {path = "./arch/"}
 swc_node_base = "0.4.0"
 tokio = {version = "1.10.1", features = ["rt", "rt-multi-thread", "time", "process", "macros", "sync"]}
 tracing = "0.1.26"
