@@ -1,14 +1,14 @@
 use anyhow::{Context, Error};
-use cargo::{
-    core::{compiler::CompileMode, shell::Verbosity, Workspace},
-    ops::{CompileFilter, CompileOptions, Packages},
-    util::{important_paths, interning::InternedString},
-    Config,
+use cargo_metadata::Message;
+use std::{
+    env,
+    io::BufReader,
+    path::PathBuf,
+    process::{Command, Stdio},
 };
-use std::{env, path::PathBuf};
 use structopt::StructOpt;
 use tokio::task::spawn_blocking;
-use tracing::{info, subscriber::with_default};
+use tracing::{error, info};
 
 use crate::util::cargo::cargo_target_dir;
 
@@ -38,58 +38,53 @@ pub struct BaseCargoCommand {
 }
 
 impl BaseCargoCommand {
-    fn to_compile_opts(&self, config: &Config) -> Result<CompileOptions, Error> {
-        let profile = if self.release { "release" } else { "dev" };
-
-        let mut opts = CompileOptions::new(&config, CompileMode::Build)
-            .context("failed to create default compile options")?;
-        opts.build_config.requested_profile = InternedString::new(profile);
-
-        opts.spec = Packages::from_flags(self.all, Default::default(), self.crate_name.clone())?;
-
-        opts.filter = CompileFilter::from_raw_arguments(
-            true,
-            Default::default(),
-            false,
-            Default::default(),
-            false,
-            Default::default(),
-            false,
-            Default::default(),
-            false,
-            false,
-        );
-
-        Ok(opts)
-    }
-
     fn run_sync(&self) -> Result<Vec<PathBuf>, Error> {
-        let dylibs = with_default(
-            tracing::subscriber::NoSubscriber::default(),
-            || -> Result<_, Error> {
-                let cargo_config =
-                    Config::default().context("failed to create default cargo config")?;
-                let manifest_path = important_paths::find_root_manifest_for_wd(cargo_config.cwd())
-                    .context("failed to find root manifest for working directory")?;
-                let workspace = Workspace::new(&manifest_path, &cargo_config)
-                    .context("failed to create cargo workspace")?;
+        let mut dylibs = vec![];
+        let mut cmd = Command::new("cargo");
 
-                workspace.config().shell().set_verbosity(Verbosity::Normal);
+        cmd.stdout(Stdio::piped())
+            .arg("build")
+            .arg("--message-format=json-render-diagnostics");
+        let mut cargo = cmd.spawn().unwrap();
 
-                let compile_opts = self.to_compile_opts(&cargo_config)?;
+        let reader = BufReader::new(cargo.stdout.take().unwrap());
+        for message in cargo_metadata::Message::parse_stream(reader) {
+            let message = message?;
+            match message {
+                Message::CompilerMessage(msg) => {
+                    println!("{:?}", msg);
+                }
+                Message::CompilerArtifact(artifact) => {
+                    // We didn't build it.
+                    if artifact.fresh {
+                        let kinds = &*artifact.target.kind;
+                        if kinds.len() == 1 {
+                            if kinds[0] == "lib"
+                                || kinds[0] == "proc-macro"
+                                || artifact.target.name == "build-script-build"
+                            {
+                                continue;
+                            }
+                        }
 
-                let compilation = cargo::ops::compile(&workspace, &compile_opts)
-                    .context("failed to compile the plugin using cargo")?;
+                        println!("{:?}", kinds);
+                    }
 
-                let dylibs = compilation
-                    .cdylibs
-                    .into_iter()
-                    .map(|v| v.path)
-                    .collect::<Vec<_>>();
+                    println!("{:?}", artifact);
+                }
+                Message::BuildScriptExecuted(..) => {}
+                Message::BuildFinished(finished) => {
+                    if finished.success {
+                        info!("`cargo build` successed")
+                    } else {
+                        error!("`cargo build` failed");
+                    }
+                }
+                _ => (), // Unknown message
+            }
+        }
 
-                Ok(dylibs)
-            },
-        )?;
+        let output = cargo.wait().expect("Couldn't get cargo's exit status");
 
         info!("Built {:?}", dylibs);
 
