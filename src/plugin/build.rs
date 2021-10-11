@@ -4,7 +4,8 @@ use anyhow::{bail, Context, Error};
 use rayon::prelude::*;
 use std::fs::{copy, create_dir_all};
 use structopt::StructOpt;
-use tracing::error;
+use swc_node_arch::PlatformDetail;
+use tracing::{debug, error, info};
 
 mod cargo;
 
@@ -23,6 +24,7 @@ impl BuildCommand {
             Some(v) => v,
             None => get_default_cargo_target()?,
         };
+        let p: PlatformDetail = platform.parse().context("failed to parse platform")?;
 
         let libs = self.cargo.run()?;
 
@@ -39,12 +41,18 @@ impl BuildCommand {
                 let name = format!(
                     "{}.{}.{}",
                     lib.crate_name,
-                    platform,
+                    p.platform_arch_abi,
                     cdylib_ext.to_string_lossy()
                 );
                 let copied_path = build_dir.join(&name);
 
                 copy(&lib.cdylib_path, &copied_path).context("failed to copy file")?;
+
+                debug!(
+                    "Copying {} to {}",
+                    lib.cdylib_path.display(),
+                    copied_path.display()
+                );
 
                 Ok(())
             })
@@ -63,6 +71,8 @@ impl BuildCommand {
         if error {
             bail!("failed to copy plugin");
         }
+
+        info!("Built files are copied to {}", build_dir.display());
 
         Ok(())
     }
