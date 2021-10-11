@@ -1,5 +1,5 @@
 use self::{
-    build::BuildCommand, init::InitCommand, publish::PublishCommand,
+    build::BuildCommand, init::InitCommand, package::PackageCommand, publish::PublishCommand,
     upgrade_deps::UpgradeDepsCommand,
 };
 use anyhow::{Context, Error};
@@ -7,6 +7,7 @@ use structopt::StructOpt;
 
 pub mod build;
 pub mod init;
+pub mod package;
 pub mod publish;
 pub mod upgrade_deps;
 
@@ -15,6 +16,7 @@ pub mod upgrade_deps;
 pub enum PluginCommand {
     Init(InitCommand),
     Build(BuildCommand),
+    Package(PackageCommand),
     Publish(PublishCommand),
     UpgradeDeps(UpgradeDepsCommand),
 }
@@ -26,6 +28,9 @@ impl PluginCommand {
                 cmd.run().context("failed to initialize a plugin project")?;
             }
             PluginCommand::Build(cmd) => {
+                cmd.run()?;
+            }
+            PluginCommand::Package(cmd) => {
                 cmd.run()?;
             }
             PluginCommand::Publish(_) => todo!(),
