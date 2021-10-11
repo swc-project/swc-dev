@@ -34,7 +34,7 @@ pub struct BaseCargoCommand {
 
     /// Flags to pass to cargo.
     #[structopt(long)]
-    pub cargo_flags: Option<String>,
+    pub cargo_flags: Option<Vec<String>>,
 }
 
 impl BaseCargoCommand {
@@ -46,6 +46,31 @@ impl BaseCargoCommand {
         cmd.stdout(Stdio::piped())
             .arg("build")
             .arg("--message-format=json-render-diagnostics");
+
+        if self.release {
+            cmd.arg("--release");
+        }
+
+        if self.all {
+            cmd.arg("--workspace");
+        }
+
+        for name in &self.crate_name {
+            cmd.arg("--package").arg(&name);
+        }
+
+        if let Some(target) = &self.target {
+            cmd.arg("--target").arg(target);
+        }
+
+        for name in &self.crate_name {
+            cmd.arg("--package").arg(&name);
+        }
+
+        if let Some(flags) = &self.cargo_flags {
+            cmd.args(flags);
+        }
+
         let mut cargo = cmd.spawn().unwrap();
 
         let reader = BufReader::new(cargo.stdout.take().unwrap());
