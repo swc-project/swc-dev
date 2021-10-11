@@ -2,7 +2,9 @@ extern crate swc_node_base;
 
 use anyhow::Error;
 use plugin::PluginCommand;
+use std::time::Instant;
 use structopt::StructOpt;
+use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 mod plugin;
@@ -27,11 +29,13 @@ fn main() -> Result<(), Error> {
 
     let cmd = Cmd::from_args();
 
+    let start = Instant::now();
     match cmd {
         Cmd::Plugin(cmd) => {
             cmd.run()?;
         }
     }
+    info!("Done in {:?}", start.elapsed());
 
     Ok(())
 }
