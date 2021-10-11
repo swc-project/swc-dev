@@ -1,8 +1,8 @@
-use super::build::BaseCargoCommand;
+use super::build::BaseCargoBuildCommand;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 pub struct PackageCommand {
     #[structopt(flatten)]
-    pub cargo: BaseCargoCommand,
+    pub cargo: BaseCargoBuildCommand,
 }

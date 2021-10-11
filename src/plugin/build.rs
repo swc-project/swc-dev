@@ -15,7 +15,7 @@ use crate::util::cargo::cargo_target_dir;
 /// Used for commands involving `cargo build`
 
 #[derive(Debug, StructOpt)]
-pub struct BaseCargoCommand {
+pub struct BaseCargoBuildCommand {
     /// Build for production.
     #[structopt(long)]
     pub release: bool,
@@ -37,7 +37,7 @@ pub struct BaseCargoCommand {
     pub cargo_flags: Option<Vec<String>>,
 }
 
-impl BaseCargoCommand {
+impl BaseCargoBuildCommand {
     #[tracing::instrument(name = "cargo build", skip(self))]
     fn run_sync(&self) -> Result<Vec<PathBuf>, Error> {
         let mut cdylibs = vec![];
@@ -153,7 +153,7 @@ impl BaseCargoCommand {
 #[derive(Debug, StructOpt)]
 pub struct BuildCommand {
     #[structopt(flatten)]
-    pub cargo: BaseCargoCommand,
+    pub cargo: BaseCargoBuildCommand,
 }
 
 impl BuildCommand {
