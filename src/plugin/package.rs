@@ -32,7 +32,7 @@ impl PackageCommand {
 
         let libs = self.cargo.run().await?;
 
-        let plugin_names = libs
+        let crate_names = libs
             .iter()
             .map(|v| v.crate_name.clone())
             .collect::<IndexSet<_, ahash::RandomState>>();
@@ -40,8 +40,8 @@ impl PackageCommand {
         let pkgs_dir = build_dir.join("pkgs");
 
         for platform in platforms {
-            for name in &plugin_names {
-                let pkg_dir = pkgs_dir.join(format!("{}-{}", name, platform));
+            for crate_name in &crate_names {
+                let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
 
                 dbg!(&pkg_dir);
             }
