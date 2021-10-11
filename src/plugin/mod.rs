@@ -20,19 +20,17 @@ pub enum PluginCommand {
 }
 
 impl PluginCommand {
-    pub async fn run(self) -> Result<(), Error> {
+    pub fn run(self) -> Result<(), Error> {
         match self {
             PluginCommand::Init(cmd) => {
-                cmd.run()
-                    .await
-                    .context("failed to initialize a plugin project")?;
+                cmd.run().context("failed to initialize a plugin project")?;
             }
             PluginCommand::Build(cmd) => {
-                cmd.run().await?;
+                cmd.run()?;
             }
             PluginCommand::Publish(_) => todo!(),
             PluginCommand::UpgradeDeps(cmd) => {
-                cmd.run().await.context("failed to upgrade dependencies")?;
+                cmd.run().context("failed to upgrade dependencies")?;
             }
         }
 

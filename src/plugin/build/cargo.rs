@@ -1,5 +1,5 @@
 use crate::util::cargo::{cargo_target_dir, get_default_cargo_target_sync};
-use anyhow::{bail, Context, Error};
+use anyhow::{bail, Error};
 use cargo_metadata::Message;
 use std::{
     io::BufReader,
@@ -7,7 +7,6 @@ use std::{
     process::{Command, Stdio},
 };
 use structopt::StructOpt;
-use tokio::task::spawn_blocking;
 use tracing::{debug, error, info, warn};
 
 /// Used for commands involving `cargo build`
@@ -141,17 +140,15 @@ impl BaseCargoBuildCommand {
         Ok(cdylibs)
     }
 
-    pub async fn run(self) -> Result<Vec<BuiltPlugin>, Error> {
-        let target_dir = cargo_target_dir().await?;
+    pub fn run(self) -> Result<Vec<BuiltPlugin>, Error> {
+        let target_dir = cargo_target_dir()?;
         let target_dir_str = target_dir.to_string_lossy();
         info!(
             target_dir = &*target_dir_str,
             "Building swc plugin using cargo"
         );
 
-        spawn_blocking(move || self.run_sync())
-            .await
-            .context("failed to await")?
+        self.run_sync()
     }
 }
 

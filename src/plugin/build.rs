@@ -5,9 +5,11 @@ use crate::util::{
 };
 use anyhow::{bail, Context, Error};
 use indexmap::IndexSet;
-use std::path::Path;
+use std::{
+    fs::{create_dir_all, read_to_string, write},
+    path::Path,
+};
 use structopt::StructOpt;
-use tokio::fs::{create_dir_all, read_to_string, write};
 use tracing::info;
 
 mod cargo;
@@ -26,8 +28,8 @@ pub struct BuildCommand {
 }
 
 impl BuildCommand {
-    pub async fn run(self) -> Result<(), Error> {
-        let build_dir = swc_build_dir().await?;
+    pub fn run(self) -> Result<(), Error> {
+        let build_dir = swc_build_dir()?;
 
         let platforms = if let Some(only) = &self.only_platforms {
             only.clone()
@@ -38,7 +40,7 @@ impl BuildCommand {
                 .collect()
         };
 
-        let libs = self.cargo.run().await?;
+        let libs = self.cargo.run()?;
 
         let crate_names = libs
             .iter()
@@ -49,7 +51,7 @@ impl BuildCommand {
 
         for platform in platforms {
             for crate_name in &crate_names {
-                create_package_for_platform(&pkgs_dir, &crate_name, &platform).await?;
+                create_package_for_platform(&pkgs_dir, &crate_name, &platform)?;
             }
         }
 
@@ -60,7 +62,7 @@ impl BuildCommand {
 }
 
 #[tracing::instrument(name = "build_node_package", skip(pkgs_dir))]
-async fn create_package_for_platform(
+fn create_package_for_platform(
     pkgs_dir: &Path,
     crate_name: &str,
     platform: &str,
@@ -71,7 +73,7 @@ async fn create_package_for_platform(
     // let platform_detail: PlatformDetail = platform.parse().context("invalid
     // platform")?;
 
-    create_dir_all(&pkg_dir).await.with_context(|| {
+    create_dir_all(&pkg_dir).with_context(|| {
         format!(
             "failed to create `{}` which is required to create a binary package for `{}`",
             pkg_dir.display(),
@@ -80,7 +82,6 @@ async fn create_package_for_platform(
     })?;
 
     let manifest_path = get_cargo_manifest_path(crate_name.to_string())
-        .await
         .context("failed to get the path of cargo manifest")?;
     let manifest_dir = manifest_path.parent().unwrap();
     let package_json_path = manifest_dir.join("package.json");
@@ -93,7 +94,7 @@ async fn create_package_for_platform(
         )
     }
 
-    let package_json_str = read_to_string(&package_json_path).await?;
+    let package_json_str = read_to_string(&package_json_path)?;
 
     let mut bin_pkg_json: PackageJsonForBin = serde_json::from_str(&package_json_str)
         .with_context(|| {
@@ -118,14 +119,12 @@ async fn create_package_for_platform(
     let bin_json_path = pkg_dir.join("package.json");
     let bin_pkg_json = serde_json::to_string_pretty(&bin_pkg_json)
         .context("failed to serialize package.json file for the binary package")?;
-    write(&bin_json_path, &bin_pkg_json)
-        .await
-        .with_context(|| {
-            format!(
-                "failed to write package.json file to `{}`",
-                bin_json_path.display()
-            )
-        })?;
+    write(&bin_json_path, &bin_pkg_json).with_context(|| {
+        format!(
+            "failed to write package.json file to `{}`",
+            bin_json_path.display()
+        )
+    })?;
 
     dbg!(&pkg_dir);
 

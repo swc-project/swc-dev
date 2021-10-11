@@ -24,7 +24,7 @@ fn is_version_dep(dependency: &cargo_metadata::Dependency) -> bool {
 
 impl Manifests {
     /// Get all manifests in the workspace.
-    async fn get_all(manifest_path: &Option<PathBuf>) -> Result<Self, Error> {
+    fn get_all(manifest_path: &Option<PathBuf>) -> Result<Self, Error> {
         let cur_dir = env::current_dir().context("failed to get current directory")?;
 
         let mut cmd = cargo_metadata::MetadataCommand::new();
@@ -32,7 +32,7 @@ impl Manifests {
         if let Some(path) = manifest_path {
             cmd.manifest_path(path);
         }
-        let result = cargo_metadata(cmd, &cur_dir).await?;
+        let result = cargo_metadata(cmd, &cur_dir)?;
 
         result
             .packages
@@ -50,7 +50,7 @@ impl Manifests {
 
     /// Get the manifest specified by the manifest path. Try to make an educated
     /// guess if no path is provided.
-    async fn get_local_one(manifest_path: &Option<PathBuf>) -> Result<Self, Error> {
+    fn get_local_one(manifest_path: &Option<PathBuf>) -> Result<Self, Error> {
         let cur_dir = env::current_dir().context("failed to get current directory")?;
 
         let resolved_manifest_path: String = find(manifest_path)
@@ -66,7 +66,7 @@ impl Manifests {
         if let Some(path) = manifest_path {
             cmd.manifest_path(path);
         }
-        let result = cargo_metadata(cmd, &cur_dir).await?;
+        let result = cargo_metadata(cmd, &cur_dir)?;
 
         let packages = result.packages;
         let package = packages
@@ -260,11 +260,11 @@ impl DesiredUpgrades {
 struct ActualUpgrades(HashMap<Dependency, String>);
 
 /// `cargo upgrade`, from `cargo-edit`.
-pub async fn upgrade_dep(crate_name: &str, workspace: bool) -> Result<(), Error> {
+pub fn upgrade_dep(crate_name: &str, workspace: bool) -> Result<(), Error> {
     let manifests = if workspace {
-        Manifests::get_all(&None).await
+        Manifests::get_all(&None)
     } else {
-        Manifests::get_local_one(&None).await
+        Manifests::get_local_one(&None)
     }
     .context("failed to fetch manifest for `cargo-edit`")?;
 

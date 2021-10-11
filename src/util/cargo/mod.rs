@@ -5,40 +5,33 @@ use std::{
     env,
     path::{Path, PathBuf},
 };
-use tokio::task::spawn_blocking;
 
 pub mod add;
 pub mod upgrade;
 
-pub async fn cargo_metadata(
-    mut cmd: MetadataCommand,
-    from: &Path,
-) -> Result<cargo_metadata::Metadata> {
+pub fn cargo_metadata(mut cmd: MetadataCommand, from: &Path) -> Result<cargo_metadata::Metadata> {
     let from = from.to_path_buf();
-    spawn_blocking(move || {
-        let result = cmd
-            .current_dir(&from)
-            .exec()
-            .context("failed to execute `cargo metadata`")?;
 
-        Ok(result)
-    })
-    .await
-    .context("failed to join the task for `cargo metadata`")?
+    let result = cmd
+        .current_dir(&from)
+        .exec()
+        .context("failed to execute `cargo metadata`")?;
+
+    Ok(result)
 }
 
-pub async fn swc_build_dir() -> Result<PathBuf> {
-    let cargo_target = cargo_target_dir().await?;
+pub fn swc_build_dir() -> Result<PathBuf> {
+    let cargo_target = cargo_target_dir()?;
 
     Ok(cargo_target.join(".swc"))
 }
 
 // #[cached(result)]
-pub async fn get_cargo_manifest_path(crate_name: String) -> Result<PathBuf> {
+pub fn get_cargo_manifest_path(crate_name: String) -> Result<PathBuf> {
     let from = env::current_dir().context("failed to get current dir")?;
 
     let cmd = MetadataCommand::new();
-    let meta = cargo_metadata(cmd, &from).await?;
+    let meta = cargo_metadata(cmd, &from)?;
 
     Ok(meta
         .packages
@@ -51,12 +44,12 @@ pub async fn get_cargo_manifest_path(crate_name: String) -> Result<PathBuf> {
 }
 
 #[cached(result)]
-pub async fn cargo_target_dir() -> Result<PathBuf> {
+pub fn cargo_target_dir() -> Result<PathBuf> {
     let from = env::current_dir().context("failed to get current dir")?;
 
     let mut cmd = MetadataCommand::new();
     cmd.no_deps();
-    let md = cargo_metadata(cmd, &from).await?;
+    let md = cargo_metadata(cmd, &from)?;
 
     Ok(md.target_directory.as_std_path().to_path_buf())
 }

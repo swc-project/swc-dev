@@ -29,7 +29,6 @@ serde_json = "1.0.68"
 structopt = "0.3.21"
 swc_node_arch = {path = "./arch/"}
 swc_node_base = "0.4.0"
-tokio = {version = "1.10.1", features = ["rt", "rt-multi-thread", "fs", "time", "process", "macros", "sync"]}
 tracing = "0.1.26"
 tracing-subscriber = "0.2.20"
 url = "2"

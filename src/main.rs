@@ -14,8 +14,7 @@ pub enum Cmd {
     Plugin(PluginCommand),
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
+fn main() -> Result<(), Error> {
     let logger = tracing_subscriber::FmtSubscriber::builder()
         .without_time()
         .with_target(false)
@@ -30,7 +29,7 @@ async fn main() -> Result<(), Error> {
 
     match cmd {
         Cmd::Plugin(cmd) => {
-            cmd.run().await?;
+            cmd.run()?;
         }
     }
 
