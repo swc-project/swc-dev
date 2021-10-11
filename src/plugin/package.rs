@@ -6,12 +6,14 @@ use crate::{
     },
 };
 use anyhow::{bail, Context, Error};
+use rayon::prelude::*;
 use std::{
     fs::{create_dir_all, read_to_string, write},
     path::Path,
+    sync::Arc,
 };
 use structopt::StructOpt;
-use tracing::info;
+use tracing::{error, info};
 
 mod package_json;
 
@@ -42,12 +44,32 @@ impl PackageCommand {
                 .collect()
         };
 
-        let pkgs_dir = build_dir.join("pkgs");
+        let pkgs_dir = Arc::new(build_dir.join("pkgs"));
 
-        for platform in platforms {
-            for crate_name in &crate_names {
-                create_package_for_platform(&pkgs_dir, &crate_name, &platform)?;
+        let results = platforms
+            .par_iter()
+            .cloned()
+            .flat_map(|platform| {
+                let pkgs_dir = pkgs_dir.clone();
+                crate_names.par_iter().map(move |crate_name| {
+                    create_package_for_platform(&pkgs_dir, &crate_name, &platform)
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let mut error = false;
+        for result in results {
+            match result {
+                Ok(..) => {}
+                Err(err) => {
+                    error = true;
+                    error!("failed to create a package for platfomr: {:?}", err);
+                }
             }
+        }
+
+        if error {
+            bail!("failed to create packages");
         }
 
         Ok(())

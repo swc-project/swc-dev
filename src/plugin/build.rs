@@ -2,7 +2,9 @@ use self::cargo::BaseCargoBuildCommand;
 use crate::util::cargo::{get_default_cargo_target, swc_build_dir};
 use anyhow::Error;
 use indexmap::IndexSet;
+use rayon::prelude::*;
 use structopt::StructOpt;
+use tracing::error;
 
 mod cargo;
 
@@ -17,7 +19,7 @@ impl BuildCommand {
     pub fn run(self) -> Result<(), Error> {
         let build_dir = swc_build_dir()?;
 
-        let target_platform = match self.cargo.target.clone() {
+        let platform = match self.cargo.target.clone() {
             Some(v) => v,
             None => get_default_cargo_target()?,
         };
@@ -31,7 +33,14 @@ impl BuildCommand {
 
         let pkgs_dir = build_dir.join("pkgs");
 
-        dbg!(&libs);
+        crate_names.par_iter().for_each(|crate_name| {
+            let res =
+                super::package::create_package_for_platform(&pkgs_dir, &crate_name, &platform);
+
+            if res.is_err() {
+                error!("failed to build package for {}", crate_name)
+            }
+        });
 
         Ok(())
     }
