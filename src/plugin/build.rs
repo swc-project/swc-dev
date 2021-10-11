@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Error};
 use indexmap::IndexSet;
 use std::path::Path;
 use structopt::StructOpt;
-use tokio::fs::read_to_string;
+use tokio::fs::{create_dir_all, read_to_string, write};
 use tracing::info;
 
 mod cargo;
@@ -71,6 +71,14 @@ async fn create_package_for_platform(
     // let platform_detail: PlatformDetail = platform.parse().context("invalid
     // platform")?;
 
+    create_dir_all(&pkg_dir).await.with_context(|| {
+        format!(
+            "failed to create `{}` which is required to create a binary package for `{}`",
+            pkg_dir.display(),
+            platform
+        )
+    })?;
+
     let manifest_path = get_cargo_manifest_path(crate_name.to_string())
         .await
         .context("failed to get the path of cargo manifest")?;
@@ -87,19 +95,37 @@ async fn create_package_for_platform(
 
     let package_json_str = read_to_string(&package_json_path).await?;
 
-    let bin_json: PackageJsonForBin =
-        serde_json::from_str(&package_json_str).with_context(|| {
+    let mut bin_pkg_json: PackageJsonForBin = serde_json::from_str(&package_json_str)
+        .with_context(|| {
             format!(
                 "failed to create the package.json file for platorm package from the main \
                  package.json file at {}",
                 package_json_path.display()
             )
         })?;
-    dbg!(&bin_json);
+    let main_name = bin_pkg_json.name.clone();
+
+    bin_pkg_json.name = format!("{}-{}", bin_pkg_json.name, platform);
+    bin_pkg_json.description = format!(
+        "This package is part of {}. This packaged is installed only for `{}`.",
+        main_name, platform
+    );
 
     // let package_json = PackageJsonForBin {
     //     name: crate_name.to_string(),
     // };
+
+    let bin_json_path = pkg_dir.join("package.json");
+    let bin_pkg_json = serde_json::to_string_pretty(&bin_pkg_json)
+        .context("failed to serialize package.json file for the binary package")?;
+    write(&bin_json_path, &bin_pkg_json)
+        .await
+        .with_context(|| {
+            format!(
+                "failed to write package.json file to `{}`",
+                bin_json_path.display()
+            )
+        })?;
 
     dbg!(&pkg_dir);
 
