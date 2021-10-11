@@ -1,4 +1,6 @@
-pub fn all_node_platforms() -> Vec<&'static str> {
+use swc_node_arch::PlatformDetail;
+
+pub fn all_node_platforms() -> Vec<PlatformDetail> {
     vec![
         "win32-x64-msvc",
         "darwin-x64",
@@ -13,4 +15,7 @@ pub fn all_node_platforms() -> Vec<&'static str> {
         "linux-arm64-musl",
         "win32-arm64-msvc",
     ]
+    .into_iter()
+    .map(|s| s.parse().unwrap())
+    .collect()
 }

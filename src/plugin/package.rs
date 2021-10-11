@@ -13,6 +13,7 @@ use std::{
     sync::Arc,
 };
 use structopt::StructOpt;
+use swc_node_arch::PlatformDetail;
 use tracing::{error, info};
 
 mod package_json;
@@ -25,7 +26,7 @@ pub struct PackageCommand {
     pub crates: Vec<String>,
 
     /// If specified, the package will contains binaries only for the specified
-    /// platforms.
+    /// platforms. If not specified, all platforms will be used.
     #[structopt(long)]
     pub platforms: Option<Vec<String>>,
 }
@@ -44,23 +45,22 @@ impl PackageCommand {
         };
 
         let platforms = if let Some(only) = &self.platforms {
-            only.clone()
+            only.iter().map(|s| s.parse().unwrap()).collect()
         } else {
             all_node_platforms()
-                .into_iter()
-                .map(|v| v.to_string())
-                .collect()
         };
 
+        let build_dir = Arc::new(output_base.join("build"));
         let pkgs_dir = Arc::new(output_base.join("pkgs"));
 
         let results = platforms
             .par_iter()
             .cloned()
             .flat_map(|platform| {
+                let build_dir = build_dir.clone();
                 let pkgs_dir = pkgs_dir.clone();
                 crate_names.par_iter().map(move |crate_name| {
-                    create_package_for_platform(&pkgs_dir, &crate_name, &platform)
+                    create_package_for_platform(&pkgs_dir, &build_dir, &crate_name, &platform)
                 })
             })
             .collect::<Vec<_>>();
@@ -87,8 +87,9 @@ impl PackageCommand {
 #[tracing::instrument(name = "build_node_package", skip(pkgs_dir))]
 fn create_package_for_platform(
     pkgs_dir: &Path,
+    build_dir: &Path,
     crate_name: &str,
-    platform: &str,
+    platform: &PlatformDetail,
 ) -> Result<(), Error> {
     info!("Creating a package for a platform");
 

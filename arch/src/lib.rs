@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Error};
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 use string_enum::StringEnum;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, StringEnum)]
@@ -132,5 +132,11 @@ impl FromStr for PlatformDetail {
             })
         })()
         .with_context(|| format!("failed to parse `{}` as platform detail", raw))
+    }
+}
+
+impl Display for PlatformDetail {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.platform_arch_abi, f)
     }
 }
