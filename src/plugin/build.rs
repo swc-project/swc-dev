@@ -7,7 +7,7 @@ use anyhow::{bail, Context, Error};
 use indexmap::IndexSet;
 use std::path::Path;
 use structopt::StructOpt;
-use swc_node_arch::PlatformDetail;
+use tokio::fs::read_to_string;
 use tracing::debug;
 
 mod cargo;
@@ -19,9 +19,8 @@ pub struct BuildCommand {
     #[structopt(flatten)]
     pub cargo: BaseCargoBuildCommand,
 
-    /// If specified, the package will contains binaries only for the specified platforms.
-    ///
-    ///
+    /// If specified, the package will contains binaries only for the specified
+    /// platforms.
     #[structopt(long)]
     pub only_platforms: Option<Vec<String>>,
 }
@@ -69,7 +68,8 @@ async fn create_package_for_platform(
     debug!("Creating a package for a platform");
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
-    // let platform_detail: PlatformDetail = platform.parse().context("invalid platform")?;
+    // let platform_detail: PlatformDetail = platform.parse().context("invalid
+    // platform")?;
 
     let manifest_path = get_cargo_manifest_path(crate_name.to_string())
         .await
@@ -84,6 +84,18 @@ async fn create_package_for_platform(
             manifest_dir.display()
         )
     }
+
+    let package_json_str = read_to_string(&package_json_path).await?;
+
+    let bin_json: PackageJsonForBin =
+        serde_json::from_str(&package_json_str).with_context(|| {
+            format!(
+                "failed to create the package.json file for platorm package from the main \
+                 package.json file at {}",
+                package_json_path.display()
+            )
+        })?;
+    dbg!(&bin_json);
 
     // let package_json = PackageJsonForBin {
     //     name: crate_name.to_string(),

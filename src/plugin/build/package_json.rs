@@ -11,13 +11,13 @@ pub struct PackageJsonForBin {
     pub name: String,
     pub version: String,
 
-    #[serde(skip)]
+    #[serde(skip_deserializing)]
     pub os: Vec<NodePlatform>,
 
-    #[serde(skip)]
+    #[serde(skip_deserializing)]
     pub cpu: Vec<NodeArch>,
 
-    #[serde(skip)]
+    #[serde(skip_deserializing)]
     pub files: Vec<String>,
 
     #[serde(skip)]
@@ -31,7 +31,7 @@ pub struct PackageJsonForBin {
 
     pub license: String,
 
-    #[serde(skip)]
+    #[serde(skip_deserializing)]
     pub engines: AHashMap<String, String>,
 
     pub publish_config: AHashMap<String, String>,
