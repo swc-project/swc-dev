@@ -11,38 +11,38 @@ pub struct PackageJsonForBin {
     pub name: String,
     pub version: String,
 
-    #[serde(skip_deserializing)]
+    #[serde(skip_deserializing, skip_serializing_if = "Vec::is_empty")]
     pub os: Vec<NodePlatform>,
 
-    #[serde(skip_deserializing)]
+    #[serde(skip_deserializing, skip_serializing_if = "Vec::is_empty")]
     pub cpu: Vec<NodeArch>,
 
-    #[serde(skip_deserializing)]
+    #[serde(skip_deserializing, skip_serializing_if = "Vec::is_empty")]
     pub files: Vec<String>,
 
-    #[serde(skip_deserializing)]
+    #[serde(skip_deserializing, skip_serializing_if = "String::is_empty")]
     pub description: String,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub keywords: Vec<String>,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub author: String,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub homepage: String,
 
     pub license: String,
 
-    #[serde(skip_deserializing)]
+    #[serde(skip_deserializing, skip_serializing_if = "AHashMap::is_empty")]
     pub engines: AHashMap<String, String>,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "AHashMap::is_empty")]
     pub publish_config: AHashMap<String, String>,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "AHashMap::is_empty")]
     pub repository: AHashMap<String, String>,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "AHashMap::is_empty")]
     pub bugs: AHashMap<String, String>,
 }

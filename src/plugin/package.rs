@@ -8,7 +8,7 @@ use crate::{
 use anyhow::{bail, Context, Error};
 use rayon::prelude::*;
 use std::{
-    fs::{create_dir_all, read_to_string, write},
+    fs::{copy, create_dir_all, read_to_string, write},
     path::Path,
     sync::Arc,
 };
@@ -97,7 +97,7 @@ fn create_package_for_platform(
     info!("Creating a package for a platform");
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
-    let bin_path = build_dir.join(format!(
+    let built_bin_path = build_dir.join(format!(
         "{}.{}{}",
         crate_name,
         platform,
@@ -112,13 +112,25 @@ fn create_package_for_platform(
         )
     })?;
 
-    if !bin_path.is_file() {
+    if !built_bin_path.is_file() {
         bail!(
             "failed to find built dynamic library from `{}`",
-            bin_path.display()
+            built_bin_path.display()
         )
     }
-    debug!("Using the dynamic library at `{}`", bin_path.display());
+    debug!(
+        "Using the dynamic library at `{}`",
+        built_bin_path.display()
+    );
+    let dylib_filename = format!("lib{}", platform.platform.cdylib_ext());
+    let bin_path = pkg_dir.join(&dylib_filename);
+    copy(&built_bin_path, &bin_path).with_context(|| {
+        format!(
+            "failed to copy built binary file ({}) to package ({})",
+            built_bin_path.display(),
+            bin_path.display(),
+        )
+    })?;
 
     let manifest_path = get_cargo_manifest_path(crate_name.to_string())
         .context("failed to get the path of cargo manifest")?;
@@ -153,6 +165,8 @@ fn create_package_for_platform(
 
     bin_pkg_json.os.push(platform.platform);
     bin_pkg_json.cpu.push(platform.arch);
+
+    bin_pkg_json.files.push(dylib_filename.clone());
 
     // let package_json = PackageJsonForBin {
     //     name: crate_name.to_string(),
