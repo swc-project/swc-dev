@@ -2,7 +2,7 @@ use crate::{
     plugin::package::package_json::PackageJsonForBin,
     util::{
         cargo::{get_all_crates, get_cargo_manifest_path, swc_output_dir},
-        node::platform::all_node_platforms,
+        node::platform::{all_node_platforms, parse_node_platform},
     },
 };
 use anyhow::{bail, Context, Error};
@@ -45,7 +45,9 @@ impl PackageCommand {
         };
 
         let platforms = if let Some(only) = &self.platforms {
-            only.iter().map(|s| s.parse().unwrap()).collect()
+            only.iter()
+                .map(|s| parse_node_platform(s).unwrap())
+                .collect()
         } else {
             all_node_platforms()
         };
