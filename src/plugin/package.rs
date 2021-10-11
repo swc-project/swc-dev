@@ -147,7 +147,7 @@ fn create_package_for_platform(
 
     bin_pkg_json.name = format!("{}-{}", bin_pkg_json.name, platform);
     bin_pkg_json.description = format!(
-        "This package is part of {}. This packaged is installed only for `{}`.",
+        "This package is part of {}. This package will be installed only for `{}`.",
         main_name, platform
     );
 
