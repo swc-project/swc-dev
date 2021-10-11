@@ -1,5 +1,5 @@
 use self::cargo::BaseCargoBuildCommand;
-use crate::util::cargo::swc_build_dir;
+use crate::util::cargo::{get_default_cargo_target, swc_build_dir};
 use anyhow::Error;
 use indexmap::IndexSet;
 use structopt::StructOpt;
@@ -16,6 +16,11 @@ pub struct BuildCommand {
 impl BuildCommand {
     pub fn run(self) -> Result<(), Error> {
         let build_dir = swc_build_dir()?;
+
+        let target_platform = match self.cargo.target.clone() {
+            Some(v) => v,
+            None => get_default_cargo_target()?,
+        };
 
         let libs = self.cargo.run()?;
 

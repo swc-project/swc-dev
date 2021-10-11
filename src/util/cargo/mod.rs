@@ -55,7 +55,7 @@ pub fn cargo_target_dir() -> Result<PathBuf> {
 }
 
 #[cached(result)]
-pub fn get_default_cargo_target_sync() -> Result<String> {
+pub fn get_default_cargo_target() -> Result<String> {
     use std::process::Command;
 
     let output = Command::new("rustc")

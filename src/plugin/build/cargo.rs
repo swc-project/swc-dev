@@ -1,4 +1,4 @@
-use crate::util::cargo::{cargo_target_dir, get_default_cargo_target_sync};
+use crate::util::cargo::{cargo_target_dir, get_default_cargo_target};
 use anyhow::{bail, Error};
 use cargo_metadata::Message;
 use std::{
@@ -72,7 +72,7 @@ impl BaseCargoBuildCommand {
 
         let target = match self.target.clone() {
             Some(v) => v,
-            None => get_default_cargo_target_sync()?,
+            None => get_default_cargo_target()?,
         };
 
         let reader = BufReader::new(cargo.stdout.take().unwrap());
