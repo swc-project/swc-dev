@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use anyhow::{bail, Context, Error};
+use std::str::FromStr;
 use string_enum::StringEnum;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, StringEnum)]
