@@ -4,9 +4,11 @@ use anyhow::Error;
 use indexmap::IndexSet;
 use std::path::Path;
 use structopt::StructOpt;
+use tracing::debug;
 
 mod cargo;
 
+/// Build plugin packages.
 #[derive(Debug, StructOpt)]
 pub struct BuildCommand {
     #[structopt(flatten)]
@@ -53,12 +55,15 @@ impl BuildCommand {
     }
 }
 
+#[tracing::instrument(name = "build_node_package", skip(pkgs_dir))]
 fn create_package_for_platform(
     pkgs_dir: &Path,
     crate_name: &str,
     platform: &str,
 ) -> Result<(), Error> {
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
+
+    debug!("Creating a package for a platform");
 
     dbg!(&pkg_dir);
 
