@@ -111,7 +111,7 @@ impl BaseCargoBuildCommand {
                             .map(|v| v.to_path_buf().into_std_path_buf());
 
                         cdylibs.extend(paths.map(|cdylib_path| BuiltPlugin {
-                            name: artifact.target.name.clone(),
+                            crate_name: artifact.target.name.clone(),
                             target: target.clone(),
                             cdylib_path,
                         }));
@@ -159,7 +159,7 @@ impl BaseCargoBuildCommand {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BuiltPlugin {
-    pub name: String,
+    pub crate_name: String,
     pub target: String,
     pub cdylib_path: PathBuf,
 }

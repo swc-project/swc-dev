@@ -2,6 +2,7 @@ use crate::util::{cargo::swc_build_dir, node::platform::all_node_platforms};
 
 use super::build::BaseCargoBuildCommand;
 use anyhow::Error;
+use indexmap::IndexSet;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -19,7 +20,6 @@ pub struct PackageCommand {
 impl PackageCommand {
     pub async fn run(self) -> Result<(), Error> {
         let build_dir = swc_build_dir().await?;
-        let libs = self.cargo.run().await?;
 
         let platforms = if let Some(only) = &self.only_platforms {
             only.clone()
@@ -30,12 +30,21 @@ impl PackageCommand {
                 .collect()
         };
 
+        let libs = self.cargo.run().await?;
+
+        let plugin_names = libs
+            .iter()
+            .map(|v| v.crate_name.clone())
+            .collect::<IndexSet<_, ahash::RandomState>>();
+
         let pkgs_dir = build_dir.join("pkgs");
 
         for platform in platforms {
-            let pkg_dir = pkgs_dir.join(&platform);
+            for name in &plugin_names {
+                let pkg_dir = pkgs_dir.join(format!("{}-{}", name, platform));
 
-            dbg!(&pkg_dir);
+                dbg!(&pkg_dir);
+            }
         }
 
         dbg!(&libs);
