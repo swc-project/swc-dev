@@ -11,12 +11,16 @@ pub struct PackageJsonForBin {
     pub name: String,
     pub version: String,
 
+    #[serde(skip)]
     pub os: Vec<NodePlatform>,
 
+    #[serde(skip)]
     pub cpu: Vec<NodeArch>,
 
+    #[serde(skip)]
     pub files: Vec<String>,
 
+    #[serde(skip)]
     pub description: String,
 
     pub keywords: Vec<String>,
@@ -27,6 +31,7 @@ pub struct PackageJsonForBin {
 
     pub license: String,
 
+    #[serde(skip)]
     pub engines: AHashMap<String, String>,
 
     pub publish_config: AHashMap<String, String>,
