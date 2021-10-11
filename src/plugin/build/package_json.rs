@@ -1,7 +1,6 @@
+use crate::util::AHashMap;
 use serde::{Deserialize, Serialize};
 use swc_node_arch::{NodeArch, NodePlatform};
-
-use crate::util::AHashMap;
 
 /// A `package.json` file for a binary package.
 ///
