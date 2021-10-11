@@ -24,7 +24,7 @@ async fn main() -> Result<(), Error> {
         .pretty()
         .finish();
 
-    let _tracing = tracing::subscriber::set_default(logger);
+    tracing::subscriber::set_global_default(logger)?;
 
     let cmd = Cmd::from_args();
 

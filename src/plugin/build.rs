@@ -38,6 +38,7 @@ pub struct BaseCargoCommand {
 }
 
 impl BaseCargoCommand {
+    #[tracing::instrument(name = "cargo build", skip(self))]
     fn run_sync(&self) -> Result<Vec<PathBuf>, Error> {
         let mut cdylibs = vec![];
         let mut cmd = Command::new("cargo");
