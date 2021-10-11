@@ -8,7 +8,7 @@ use indexmap::IndexSet;
 use std::path::Path;
 use structopt::StructOpt;
 use tokio::fs::read_to_string;
-use tracing::debug;
+use tracing::info;
 
 mod cargo;
 mod package_json;
@@ -65,7 +65,7 @@ async fn create_package_for_platform(
     crate_name: &str,
     platform: &str,
 ) -> Result<(), Error> {
-    debug!("Creating a package for a platform");
+    info!("Creating a package for a platform");
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
     // let platform_detail: PlatformDetail = platform.parse().context("invalid
