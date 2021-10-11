@@ -14,7 +14,7 @@ use std::{
 };
 use structopt::StructOpt;
 use swc_node_arch::PlatformDetail;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 mod package_json;
 
@@ -71,7 +71,7 @@ impl PackageCommand {
                 Ok(..) => {}
                 Err(err) => {
                     error = true;
-                    error!("failed to create a package for platfomr: {:?}", err);
+                    error!("failed to create a package for platform: {:?}", err);
                 }
             }
         }
@@ -94,8 +94,12 @@ fn create_package_for_platform(
     info!("Creating a package for a platform");
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
-    // let platform_detail: PlatformDetail = platform.parse().context("invalid
-    // platform")?;
+    let bin_path = build_dir.join(format!(
+        "{}-{}{}",
+        crate_name,
+        platform,
+        platform.platform.cdylib_ext()
+    ));
 
     create_dir_all(&pkg_dir).with_context(|| {
         format!(
@@ -104,6 +108,14 @@ fn create_package_for_platform(
             platform
         )
     })?;
+
+    if !bin_path.is_file() {
+        bail!(
+            "failed to find built dynamic library from `{}`",
+            bin_path.display()
+        )
+    }
+    debug!("Using the dynamic library at `{}`", bin_path.display());
 
     let manifest_path = get_cargo_manifest_path(crate_name.to_string())
         .context("failed to get the path of cargo manifest")?;
@@ -123,7 +135,7 @@ fn create_package_for_platform(
     let mut bin_pkg_json: PackageJsonForBin = serde_json::from_str(&package_json_str)
         .with_context(|| {
             format!(
-                "failed to create the package.json file for platorm package from the main \
+                "failed to create the package.json file for platform package from the main \
                  package.json file at {}",
                 package_json_path.display()
             )
