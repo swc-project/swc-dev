@@ -151,6 +151,9 @@ fn create_package_for_platform(
         main_name, platform
     );
 
+    bin_pkg_json.os.push(platform.platform);
+    bin_pkg_json.cpu.push(platform.arch);
+
     // let package_json = PackageJsonForBin {
     //     name: crate_name.to_string(),
     // };
