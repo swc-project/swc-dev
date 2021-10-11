@@ -85,6 +85,17 @@ impl NodePlatform {
                 .ok_or_else(|| anyhow::anyhow!("failed to parse `{}` as NodePlatform", s)),
         }
     }
+
+    /// Get extension for a dynamic library in this platform.
+    ///
+    /// This include a leading dot.
+    pub fn cdylib_ext(self) -> &'static str {
+        match self {
+            NodePlatform::Android | NodePlatform::Linux | NodePlatform::Freebsd => ".so",
+            NodePlatform::Darwin => ".dylib",
+            NodePlatform::Windows => ".dll",
+        }
+    }
 }
 
 //// https://github.com/napi-rs/napi-rs/blob/main/cli/src/parse-triple.ts
