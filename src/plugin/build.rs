@@ -75,7 +75,13 @@ impl BaseCargoCommand {
                             artifact
                                 .filenames
                                 .iter()
-                                .filter(|s| !s.ends_with(".rlib"))
+                                .filter(|s| {
+                                    if let Some("rlib") = s.extension() {
+                                        return false;
+                                    }
+
+                                    true
+                                })
                                 .map(|v| v.to_path_buf().into_std_path_buf()),
                         );
                         continue;
