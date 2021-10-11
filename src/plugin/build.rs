@@ -1,3 +1,4 @@
+use crate::util::cargo::{cargo_target_dir, get_default_cargo_target_sync};
 use anyhow::{bail, Context, Error};
 use cargo_metadata::Message;
 use std::{
@@ -9,8 +10,6 @@ use std::{
 use structopt::StructOpt;
 use tokio::task::spawn_blocking;
 use tracing::{debug, error, info, warn};
-
-use crate::util::cargo::cargo_target_dir;
 
 /// Used for commands involving `cargo build`
 
@@ -39,7 +38,7 @@ pub struct BaseCargoBuildCommand {
 
 impl BaseCargoBuildCommand {
     #[tracing::instrument(name = "cargo build", skip(self))]
-    fn run_sync(&self) -> Result<Vec<PathBuf>, Error> {
+    fn run_sync(&self) -> Result<Vec<BuiltPlugin>, Error> {
         let mut cdylibs = vec![];
         let mut cmd = Command::new("cargo");
 
@@ -73,6 +72,11 @@ impl BaseCargoBuildCommand {
 
         let mut cargo = cmd.spawn().unwrap();
 
+        let target = match self.target.clone() {
+            Some(v) => v,
+            None => get_default_cargo_target_sync()?,
+        };
+
         let reader = BufReader::new(cargo.stdout.take().unwrap());
         for message in cargo_metadata::Message::parse_stream(reader) {
             let message = message?;
@@ -94,19 +98,23 @@ impl BaseCargoBuildCommand {
                     }
 
                     if kinds.iter().any(|s| &**s == "cdylib") {
-                        cdylibs.extend(
-                            artifact
-                                .filenames
-                                .iter()
-                                .filter(|s| {
-                                    if let Some("rlib") = s.extension() {
-                                        return false;
-                                    }
+                        let paths = artifact
+                            .filenames
+                            .iter()
+                            .filter(|s| {
+                                if let Some("rlib") = s.extension() {
+                                    return false;
+                                }
 
-                                    true
-                                })
-                                .map(|v| v.to_path_buf().into_std_path_buf()),
-                        );
+                                true
+                            })
+                            .map(|v| v.to_path_buf().into_std_path_buf());
+
+                        cdylibs.extend(paths.map(|cdylib_path| BuiltPlugin {
+                            name: artifact.target.name.clone(),
+                            target: target.clone(),
+                            cdylib_path,
+                        }));
                         continue;
                     }
 
@@ -134,7 +142,7 @@ impl BaseCargoBuildCommand {
         Ok(cdylibs)
     }
 
-    pub async fn run(self) -> Result<Vec<PathBuf>, Error> {
+    pub async fn run(self) -> Result<Vec<BuiltPlugin>, Error> {
         let dir = env::current_dir()?;
         let target_dir = cargo_target_dir(&dir).await?;
         let target_dir_str = target_dir.to_string_lossy();
@@ -147,6 +155,13 @@ impl BaseCargoBuildCommand {
             .await
             .context("failed to await")?
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct BuiltPlugin {
+    pub name: String,
+    pub target: String,
+    pub cdylib_path: PathBuf,
 }
 
 /// Build your plugin using `cargo`.
