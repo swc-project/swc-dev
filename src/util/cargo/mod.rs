@@ -26,7 +26,7 @@ pub fn swc_build_dir() -> Result<PathBuf> {
     Ok(cargo_target.join(".swc"))
 }
 
-// #[cached(result)]
+#[cached(result)]
 pub fn get_cargo_manifest_path(crate_name: String) -> Result<PathBuf> {
     let from = env::current_dir().context("failed to get current dir")?;
 
