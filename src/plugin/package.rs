@@ -61,6 +61,7 @@ impl PackageCommand {
                 let pkgs_dir = pkgs_dir.clone();
                 crate_names.par_iter().map(move |crate_name| {
                     create_package_for_platform(&pkgs_dir, &build_dir, &crate_name, &platform)
+                        .context("failed to create a package for platform")
                 })
             })
             .collect::<Vec<_>>();
@@ -71,7 +72,7 @@ impl PackageCommand {
                 Ok(..) => {}
                 Err(err) => {
                     error = true;
-                    error!("failed to create a package for platform: {:?}", err);
+                    error!("{:?}", err);
                 }
             }
         }
