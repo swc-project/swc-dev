@@ -1,4 +1,4 @@
-use anyhow::{Context, Error};
+use anyhow::{bail, Context, Error};
 use cargo_metadata::Message;
 use std::{
     env,
@@ -8,7 +8,7 @@ use std::{
 };
 use structopt::StructOpt;
 use tokio::task::spawn_blocking;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::util::cargo::cargo_target_dir;
 
@@ -102,8 +102,11 @@ impl BaseCargoCommand {
         }
 
         let output = cargo.wait().expect("Couldn't get cargo's exit status");
+        if !output.success() {
+            bail!("failed to build plugin using cargo")
+        }
 
-        info!("Built {:?}", cdylibs);
+        debug!("Built {:?}", cdylibs);
 
         Ok(cdylibs)
     }
