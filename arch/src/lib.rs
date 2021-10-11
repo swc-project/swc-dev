@@ -67,6 +67,8 @@ pub enum NodePlatform {
     Darwin,
     /// `win32`
     Windows,
+    /// `android`
+    Android,
 }
 
 impl NodePlatform {
