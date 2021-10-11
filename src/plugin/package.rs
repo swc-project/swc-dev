@@ -96,7 +96,7 @@ fn create_package_for_platform(
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
     let bin_path = build_dir.join(format!(
-        "{}-{}{}",
+        "{}.{}{}",
         crate_name,
         platform,
         platform.platform.cdylib_ext()
