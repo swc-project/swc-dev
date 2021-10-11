@@ -167,6 +167,7 @@ fn create_package_for_platform(
     bin_pkg_json.cpu.push(platform.arch);
 
     bin_pkg_json.files.push(dylib_filename.clone());
+    bin_pkg_json.main = dylib_filename;
 
     // let package_json = PackageJsonForBin {
     //     name: crate_name.to_string(),

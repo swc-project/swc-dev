@@ -34,6 +34,9 @@ pub struct PackageJsonForBin {
 
     pub license: String,
 
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub main: String,
+
     #[serde(skip_deserializing, skip_serializing_if = "AHashMap::is_empty")]
     pub engines: AHashMap<String, String>,
 
