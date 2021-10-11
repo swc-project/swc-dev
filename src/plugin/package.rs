@@ -87,7 +87,7 @@ impl PackageCommand {
     }
 }
 
-#[tracing::instrument(name = "build_node_package", skip(pkgs_dir))]
+#[tracing::instrument(name = "build_node_package", skip(pkgs_dir, build_dir))]
 fn create_package_for_platform(
     pkgs_dir: &Path,
     build_dir: &Path,
