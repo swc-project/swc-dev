@@ -182,7 +182,5 @@ fn create_package_for_platform(
         )
     })?;
 
-    dbg!(&pkg_dir);
-
     Ok(())
 }
