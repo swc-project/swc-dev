@@ -7,6 +7,7 @@ use structopt::StructOpt;
 use tracing::debug;
 
 mod cargo;
+mod package_json;
 
 /// Build plugin packages.
 #[derive(Debug, StructOpt)]
