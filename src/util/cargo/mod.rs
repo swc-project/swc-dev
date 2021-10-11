@@ -1,6 +1,9 @@
 use anyhow::{Context, Error};
 use cargo_metadata::MetadataCommand;
-use std::path::{Path, PathBuf};
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 use tokio::task::spawn_blocking;
 
 pub mod add;
@@ -21,6 +24,14 @@ pub async fn cargo_metadata(
     })
     .await
     .context("failed to join the task for `cargo metadata`")?
+}
+
+pub async fn swc_build_dir() -> Result<PathBuf, Error> {
+    let from = env::current_dir().context("failed to get current dir")?;
+
+    let cargo_target = cargo_target_dir(&from).await?;
+
+    Ok(cargo_target.join(".swc"))
 }
 
 pub async fn cargo_target_dir(from: &Path) -> Result<PathBuf, Error> {

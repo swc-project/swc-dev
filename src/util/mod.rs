@@ -2,6 +2,7 @@ use anyhow::{anyhow, Error};
 use std::fmt::Display;
 
 pub mod cargo;
+pub mod node;
 
 pub(crate) trait CargoEditResultExt<T>: Into<cargo_edit::Result<T>> {
     fn map_err_op(self, op: impl Display) -> Result<T, Error> {
