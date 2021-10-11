@@ -158,7 +158,7 @@ pub struct BuildCommand {
 
 impl BuildCommand {
     pub async fn run(self) -> Result<(), Error> {
-        let libs = self.cargo.run().await?;
+        let _libs = self.cargo.run().await?;
 
         Ok(())
     }

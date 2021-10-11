@@ -32,7 +32,9 @@ impl PluginCommand {
             PluginCommand::Build(cmd) => {
                 cmd.run().await?;
             }
-            PluginCommand::Package(_) => todo!(),
+            PluginCommand::Package(cmd) => {
+                cmd.run().await?;
+            }
             PluginCommand::Publish(_) => todo!(),
             PluginCommand::UpgradeDeps(cmd) => {
                 cmd.run().await.context("failed to upgrade dependencies")?;
