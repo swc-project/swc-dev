@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use cached::proc_macro::cached;
 use cargo_metadata::MetadataCommand;
 use std::{
     env,
@@ -27,21 +28,40 @@ pub async fn cargo_metadata(
 }
 
 pub async fn swc_build_dir() -> Result<PathBuf> {
-    let from = env::current_dir().context("failed to get current dir")?;
-
-    let cargo_target = cargo_target_dir(&from).await?;
+    let cargo_target = cargo_target_dir().await?;
 
     Ok(cargo_target.join(".swc"))
 }
 
-pub async fn cargo_target_dir(from: &Path) -> Result<PathBuf> {
+#[cached(result)]
+pub async fn get_cargo_manifest_path(crate_name: String) -> Result<PathBuf> {
+    let from = env::current_dir().context("failed to get current dir")?;
+
+    let cmd = MetadataCommand::new();
+    let meta = cargo_metadata(cmd, &from).await?;
+
+    Ok(meta
+        .packages
+        .iter()
+        .find(|p| p.name == crate_name)
+        .context("failed to find the package")?
+        .manifest_path
+        .to_path_buf()
+        .into_std_path_buf())
+}
+
+#[cached(result)]
+pub async fn cargo_target_dir() -> Result<PathBuf> {
+    let from = env::current_dir().context("failed to get current dir")?;
+
     let mut cmd = MetadataCommand::new();
     cmd.no_deps();
-    let md = cargo_metadata(cmd, from).await?;
+    let md = cargo_metadata(cmd, &from).await?;
 
     Ok(md.target_directory.as_std_path().to_path_buf())
 }
 
+#[cached(result)]
 pub fn get_default_cargo_target_sync() -> Result<String> {
     use std::process::Command;
 

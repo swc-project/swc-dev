@@ -2,7 +2,6 @@ use crate::util::cargo::{cargo_target_dir, get_default_cargo_target_sync};
 use anyhow::{bail, Context, Error};
 use cargo_metadata::Message;
 use std::{
-    env,
     io::BufReader,
     path::PathBuf,
     process::{Command, Stdio},
@@ -143,8 +142,7 @@ impl BaseCargoBuildCommand {
     }
 
     pub async fn run(self) -> Result<Vec<BuiltPlugin>, Error> {
-        let dir = env::current_dir()?;
-        let target_dir = cargo_target_dir(&dir).await?;
+        let target_dir = cargo_target_dir().await?;
         let target_dir_str = target_dir.to_string_lossy();
         info!(
             target_dir = &*target_dir_str,

@@ -18,6 +18,7 @@ version = "0.0.0"
 [dependencies]
 ahash = "0.7.5"
 anyhow = "1.0.41"
+cached = "0.25.0"
 cargo-edit = "0.8.0"
 cargo_metadata = "0.14.0"
 clap = "2.33.3"

@@ -1,9 +1,10 @@
-use self::cargo::BaseCargoBuildCommand;
+use self::{cargo::BaseCargoBuildCommand, package_json::PackageJsonForBin};
 use crate::util::{cargo::swc_build_dir, node::platform::all_node_platforms};
-use anyhow::Error;
+use anyhow::{Context, Error};
 use indexmap::IndexSet;
 use std::path::Path;
 use structopt::StructOpt;
+use swc_node_arch::PlatformDetail;
 use tracing::debug;
 
 mod cargo;
@@ -62,9 +63,14 @@ fn create_package_for_platform(
     crate_name: &str,
     platform: &str,
 ) -> Result<(), Error> {
-    let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
-
     debug!("Creating a package for a platform");
+
+    let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
+    let platform_detail: PlatformDetail = platform.parse().context("invalid platform")?;
+
+    // let package_json = PackageJsonForBin {
+    //     name: crate_name.to_string(),
+    // };
 
     dbg!(&pkg_dir);
 
