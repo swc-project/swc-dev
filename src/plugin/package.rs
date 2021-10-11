@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::util::{cargo::swc_build_dir, node::platform::all_node_platforms};
 
 use super::build::BaseCargoBuildCommand;
@@ -41,9 +43,7 @@ impl PackageCommand {
 
         for platform in platforms {
             for crate_name in &crate_names {
-                let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
-
-                dbg!(&pkg_dir);
+                create_package_for_platform(&pkgs_dir, &crate_name, &platform)?;
             }
         }
 
@@ -51,4 +51,16 @@ impl PackageCommand {
 
         Ok(())
     }
+}
+
+fn create_package_for_platform(
+    pkgs_dir: &Path,
+    crate_name: &str,
+    platform: &str,
+) -> Result<(), Error> {
+    let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
+
+    dbg!(&pkg_dir);
+
+    Ok(())
 }
