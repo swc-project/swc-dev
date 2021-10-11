@@ -8,7 +8,7 @@ use std::{
 };
 use structopt::StructOpt;
 use tokio::task::spawn_blocking;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use crate::util::cargo::cargo_target_dir;
 
@@ -39,7 +39,7 @@ pub struct BaseCargoCommand {
 
 impl BaseCargoCommand {
     fn run_sync(&self) -> Result<Vec<PathBuf>, Error> {
-        let mut dylibs = vec![];
+        let mut cdylibs = vec![];
         let mut cmd = Command::new("cargo");
 
         cmd.stdout(Stdio::piped())
@@ -55,9 +55,10 @@ impl BaseCargoCommand {
                     println!("{:?}", msg);
                 }
                 Message::CompilerArtifact(artifact) => {
+                    let kinds = &*artifact.target.kind;
+
                     // We didn't build it.
                     if artifact.fresh {
-                        let kinds = &*artifact.target.kind;
                         if kinds.len() == 1 {
                             if kinds[0] == "lib"
                                 || kinds[0] == "proc-macro"
@@ -66,11 +67,20 @@ impl BaseCargoCommand {
                                 continue;
                             }
                         }
-
-                        println!("{:?}", kinds);
                     }
 
-                    println!("{:?}", artifact);
+                    if kinds.iter().any(|s| &**s == "cdylib") {
+                        cdylibs.extend(
+                            artifact
+                                .filenames
+                                .iter()
+                                .filter(|s| !s.ends_with(".rlib"))
+                                .map(|v| v.to_path_buf().into_std_path_buf()),
+                        );
+                        continue;
+                    }
+
+                    warn!("Unhandled artifact message: {:?}", artifact);
                 }
                 Message::BuildScriptExecuted(..) => {}
                 Message::BuildFinished(finished) => {
@@ -86,9 +96,9 @@ impl BaseCargoCommand {
 
         let output = cargo.wait().expect("Couldn't get cargo's exit status");
 
-        info!("Built {:?}", dylibs);
+        info!("Built {:?}", cdylibs);
 
-        Ok(dylibs)
+        Ok(cdylibs)
     }
 
     pub async fn run(self) -> Result<Vec<PathBuf>, Error> {
