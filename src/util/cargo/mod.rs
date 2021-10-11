@@ -20,6 +20,26 @@ pub fn cargo_metadata(mut cmd: MetadataCommand, from: &Path) -> Result<cargo_met
     Ok(result)
 }
 
+pub fn get_all_crates() -> Result<Vec<String>> {
+    let mut cmd = MetadataCommand::new();
+    cmd.no_deps();
+
+    let md = cargo_metadata(cmd, &env::current_dir()?)?;
+    let ws_pkgs = md.workspace_members;
+
+    Ok(md
+        .packages
+        .into_iter()
+        .filter_map(|p| {
+            if !ws_pkgs.contains(&p.id) {
+                return None;
+            }
+
+            Some(p.name)
+        })
+        .collect())
+}
+
 pub fn swc_build_dir() -> Result<PathBuf> {
     let cargo_target = cargo_target_dir()?;
 

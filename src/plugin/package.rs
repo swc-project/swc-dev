@@ -1,7 +1,7 @@
 use crate::{
     plugin::package::package_json::PackageJsonForBin,
     util::{
-        cargo::{get_cargo_manifest_path, swc_build_dir},
+        cargo::{get_all_crates, get_cargo_manifest_path, swc_build_dir},
         node::platform::all_node_platforms,
     },
 };
@@ -21,6 +21,7 @@ mod package_json;
 #[derive(Debug, StructOpt)]
 pub struct PackageCommand {
     /// Crates to package.
+    #[structopt(long)]
     pub crates: Vec<String>,
 
     /// If specified, the package will contains binaries only for the specified
@@ -34,6 +35,13 @@ impl PackageCommand {
         let build_dir = swc_build_dir()?;
 
         let crate_names = self.crates.clone();
+
+        let crate_names = if crate_names.is_empty() {
+            info!("Using all crates in the workspace because `--crates` is not used");
+            get_all_crates()?
+        } else {
+            crate_names
+        };
 
         let platforms = if let Some(only) = &self.platforms {
             only.clone()
