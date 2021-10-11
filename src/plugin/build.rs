@@ -1,8 +1,8 @@
 use self::cargo::BaseCargoBuildCommand;
-use crate::util::cargo::{get_default_cargo_target, swc_build_dir};
-use anyhow::Error;
-use indexmap::IndexSet;
+use crate::util::cargo::{get_default_cargo_target, swc_output_dir};
+use anyhow::{bail, Context, Error};
 use rayon::prelude::*;
+use std::fs::{copy, create_dir_all};
 use structopt::StructOpt;
 use tracing::error;
 
@@ -17,7 +17,7 @@ pub struct BuildCommand {
 
 impl BuildCommand {
     pub fn run(self) -> Result<(), Error> {
-        let build_dir = swc_build_dir()?;
+        let output_base = swc_output_dir()?;
 
         let platform = match self.cargo.target.clone() {
             Some(v) => v,
@@ -26,21 +26,43 @@ impl BuildCommand {
 
         let libs = self.cargo.run()?;
 
-        let crate_names = libs
-            .iter()
-            .map(|v| v.crate_name.clone())
-            .collect::<IndexSet<_, ahash::RandomState>>();
+        let build_dir = output_base.join("build");
+        create_dir_all(&build_dir)?;
 
-        let pkgs_dir = build_dir.join("pkgs");
+        let results = libs
+            .into_par_iter()
+            .map(|lib| -> Result<_, Error> {
+                let cdylib_ext = lib
+                    .cdylib_path
+                    .extension()
+                    .expect("cdylib should have extension");
+                let name = format!(
+                    "{}.{}.{}",
+                    lib.crate_name,
+                    platform,
+                    cdylib_ext.to_string_lossy()
+                );
+                let copied_path = build_dir.join(&name);
 
-        crate_names.par_iter().for_each(|crate_name| {
-            let res =
-                super::package::create_package_for_platform(&pkgs_dir, &crate_name, &platform);
+                copy(&lib.cdylib_path, &copied_path).context("failed to copy file")?;
 
-            if res.is_err() {
-                error!("failed to build package for {}", crate_name)
+                Ok(())
+            })
+            .collect::<Vec<_>>();
+
+        let mut error = false;
+        for result in results {
+            match result {
+                Ok(..) => {}
+                Err(err) => {
+                    error = true;
+                    error!("failed to copy plugin: {:?}", err);
+                }
             }
-        });
+        }
+        if error {
+            bail!("failed to copy plugin");
+        }
 
         Ok(())
     }

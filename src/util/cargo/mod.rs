@@ -40,7 +40,7 @@ pub fn get_all_crates() -> Result<Vec<String>> {
         .collect())
 }
 
-pub fn swc_build_dir() -> Result<PathBuf> {
+pub fn swc_output_dir() -> Result<PathBuf> {
     let cargo_target = cargo_target_dir()?;
 
     Ok(cargo_target.join(".swc"))

@@ -1,7 +1,7 @@
 use crate::{
     plugin::package::package_json::PackageJsonForBin,
     util::{
-        cargo::{get_all_crates, get_cargo_manifest_path, swc_build_dir},
+        cargo::{get_all_crates, get_cargo_manifest_path, swc_output_dir},
         node::platform::all_node_platforms,
     },
 };
@@ -32,7 +32,7 @@ pub struct PackageCommand {
 
 impl PackageCommand {
     pub fn run(self) -> Result<(), Error> {
-        let build_dir = swc_build_dir()?;
+        let output_base = swc_output_dir()?;
 
         let crate_names = self.crates.clone();
 
@@ -52,7 +52,7 @@ impl PackageCommand {
                 .collect()
         };
 
-        let pkgs_dir = Arc::new(build_dir.join("pkgs"));
+        let pkgs_dir = Arc::new(output_base.join("pkgs"));
 
         let results = platforms
             .par_iter()
@@ -85,7 +85,7 @@ impl PackageCommand {
 }
 
 #[tracing::instrument(name = "build_node_package", skip(pkgs_dir))]
-pub fn create_package_for_platform(
+fn create_package_for_platform(
     pkgs_dir: &Path,
     crate_name: &str,
     platform: &str,
