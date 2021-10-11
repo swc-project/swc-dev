@@ -20,6 +20,7 @@ anyhow = "1.0.41"
 cargo-edit = "0.8.0"
 cargo_metadata = "0.14.0"
 clap = "2.33.3"
+once_cell = "1.8.0"
 structopt = "0.3.21"
 swc_node_arch = {path = "./arch/"}
 swc_node_base = "0.4.0"
