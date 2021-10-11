@@ -1,6 +1,9 @@
 use self::{cargo::BaseCargoBuildCommand, package_json::PackageJsonForBin};
-use crate::util::{cargo::swc_build_dir, node::platform::all_node_platforms};
-use anyhow::{Context, Error};
+use crate::util::{
+    cargo::{get_cargo_manifest_path, swc_build_dir},
+    node::platform::all_node_platforms,
+};
+use anyhow::{bail, Context, Error};
 use indexmap::IndexSet;
 use std::path::Path;
 use structopt::StructOpt;
@@ -47,7 +50,7 @@ impl BuildCommand {
 
         for platform in platforms {
             for crate_name in &crate_names {
-                create_package_for_platform(&pkgs_dir, &crate_name, &platform)?;
+                create_package_for_platform(&pkgs_dir, &crate_name, &platform).await?;
             }
         }
 
@@ -58,7 +61,7 @@ impl BuildCommand {
 }
 
 #[tracing::instrument(name = "build_node_package", skip(pkgs_dir))]
-fn create_package_for_platform(
+async fn create_package_for_platform(
     pkgs_dir: &Path,
     crate_name: &str,
     platform: &str,
@@ -66,7 +69,21 @@ fn create_package_for_platform(
     debug!("Creating a package for a platform");
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
-    let platform_detail: PlatformDetail = platform.parse().context("invalid platform")?;
+    // let platform_detail: PlatformDetail = platform.parse().context("invalid platform")?;
+
+    let manifest_path = get_cargo_manifest_path(crate_name.to_string())
+        .await
+        .context("failed to get the path of cargo manifest")?;
+    let manifest_dir = manifest_path.parent().unwrap();
+    let package_json_path = manifest_dir.join("package.json");
+
+    if !package_json_path.is_file() {
+        bail!(
+            "Plugin `{}` should have package.json in `{}`",
+            crate_name,
+            manifest_dir.display()
+        )
+    }
 
     // let package_json = PackageJsonForBin {
     //     name: crate_name.to_string(),
