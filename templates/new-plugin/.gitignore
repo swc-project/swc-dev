@@ -10,4 +10,5 @@ Cargo.lock
 **/*.rs.bk
 .DS_Store
 
-*.swc-pkg.tar.gz
+*.swc-pkg.tgz
+*.swc-pkg.zip
