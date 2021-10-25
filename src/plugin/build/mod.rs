@@ -3,10 +3,11 @@ use crate::util::{
     cargo::{get_default_cargo_target, swc_output_dir},
     node::create_npm_package,
 };
-use anyhow::{bail, Context, Error};
+use anyhow::{anyhow, bail, Context, Error};
 use indexmap::IndexSet;
 use rayon::prelude::*;
 use std::{
+    env::current_dir,
     fs::{copy, create_dir_all},
     sync::Arc,
 };
@@ -90,6 +91,8 @@ impl BuildCommand {
 
         info!("Built files are copied to {}", build_dir.display());
 
+        let cur_dir = current_dir().context("failed to get current directory")?;
+
         if self.package {
             for crate_name in crate_names.iter() {
                 let pkg_dir = super::package::create_package_for_platform(
@@ -104,6 +107,17 @@ impl BuildCommand {
                     create_npm_package(&pkg_dir).context("failed to create npm package")?;
 
                 info!("Created package file at `{}`", pkg_file.display());
+
+                let ext = pkg_file
+                    .extension()
+                    .ok_or_else(|| {
+                        anyhow!("package file built by `npm pack` should have filename")
+                    })?
+                    .to_string_lossy();
+                let filename = format!("{}.{}.swc-pkg.{}", crate_name, p, ext);
+
+                copy(&pkg_file, &cur_dir.join(filename))
+                    .context("failed to copy npm package file")?;
             }
         }
 
