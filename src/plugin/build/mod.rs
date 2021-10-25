@@ -4,8 +4,12 @@ use crate::util::{
     node::create_npm_package,
 };
 use anyhow::{bail, Context, Error};
+use indexmap::IndexSet;
 use rayon::prelude::*;
-use std::fs::{copy, create_dir_all};
+use std::{
+    fs::{copy, create_dir_all},
+    sync::Arc,
+};
 use structopt::StructOpt;
 use swc_node_arch::PlatformDetail;
 use tracing::{debug, error, info};
@@ -35,11 +39,12 @@ impl BuildCommand {
 
         let libs = self.cargo.run()?;
 
-        let build_dir = output_base.join("build");
-        create_dir_all(&build_dir)?;
+        let build_dir = Arc::new(output_base.join("build"));
+        let pkgs_dir = Arc::new(output_base.join("pkgs"));
+        create_dir_all(&*build_dir)?;
 
         let results = libs
-            .into_par_iter()
+            .par_iter()
             .map(|lib| -> Result<_, Error> {
                 let cdylib_ext = lib
                     .cdylib_path
@@ -65,6 +70,10 @@ impl BuildCommand {
             })
             .collect::<Vec<_>>();
 
+        let crate_names = libs
+            .iter()
+            .map(|l| l.crate_name.clone())
+            .collect::<IndexSet<_>>();
         let mut error = false;
         for result in results {
             match result {
@@ -81,8 +90,12 @@ impl BuildCommand {
 
         info!("Built files are copied to {}", build_dir.display());
 
-        create_npm_package(&build_dir).context("npm package failed")?;
-        info!("Built files are copied to {}", build_dir.display());
+        if self.package {
+            for crate_name in crate_names.iter() {
+                super::package::create_package_for_platform(&pkgs_dir, &build_dir, &crate_name, &p)
+                    .context("failed to create package for the built platform")?;
+            }
+        }
 
         Ok(())
     }
