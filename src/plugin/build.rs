@@ -11,7 +11,7 @@ mod cargo;
 
 /// Build plugin packages.
 ///
-/// THis command generates a file named `plugin-name.platform.swc-pkg.zip`.
+/// THis command generates a file named `plugin-name.platform.swc-pkg.tar.gz`.
 #[derive(Debug, StructOpt)]
 pub struct BuildCommand {
     #[structopt(flatten)]
