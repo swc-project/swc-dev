@@ -1,5 +1,8 @@
 use self::cargo::BaseCargoBuildCommand;
-use crate::util::cargo::{get_default_cargo_target, swc_output_dir};
+use crate::util::{
+    cargo::{get_default_cargo_target, swc_output_dir},
+    node::create_npm_package,
+};
 use anyhow::{bail, Context, Error};
 use rayon::prelude::*;
 use std::fs::{copy, create_dir_all};
@@ -74,6 +77,9 @@ impl BuildCommand {
             bail!("failed to copy plugin");
         }
 
+        info!("Built files are copied to {}", build_dir.display());
+
+        create_npm_package(&build_dir).context("npm package failed")?;
         info!("Built files are copied to {}", build_dir.display());
 
         Ok(())
