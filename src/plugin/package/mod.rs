@@ -9,7 +9,7 @@ use anyhow::{bail, Context, Error};
 use rayon::prelude::*;
 use std::{
     fs::{copy, create_dir_all, read_to_string, write},
-    path::Path,
+    path::{Path, PathBuf},
     sync::Arc,
 };
 use structopt::StructOpt;
@@ -87,13 +87,14 @@ impl PackageCommand {
     }
 }
 
+/// Returns the package directory.
 #[tracing::instrument(name = "build_node_package", skip(pkgs_dir, build_dir))]
 pub(super) fn create_package_for_platform(
     pkgs_dir: &Path,
     build_dir: &Path,
     crate_name: &str,
     platform: &PlatformDetail,
-) -> Result<(), Error> {
+) -> Result<PathBuf, Error> {
     info!("Creating a package for a platform");
 
     let pkg_dir = pkgs_dir.join(format!("{}-{}", crate_name, platform));
@@ -183,5 +184,5 @@ pub(super) fn create_package_for_platform(
         )
     })?;
 
-    Ok(())
+    Ok(pkg_dir)
 }

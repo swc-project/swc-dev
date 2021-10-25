@@ -92,8 +92,15 @@ impl BuildCommand {
 
         if self.package {
             for crate_name in crate_names.iter() {
-                super::package::create_package_for_platform(&pkgs_dir, &build_dir, &crate_name, &p)
-                    .context("failed to create package for the built platform")?;
+                let pkg_dir = super::package::create_package_for_platform(
+                    &pkgs_dir,
+                    &build_dir,
+                    &crate_name,
+                    &p,
+                )
+                .context("failed to create package for the built platform")?;
+
+                create_npm_package(&pkg_dir).context("failed to create npm package")?;
             }
         }
 
