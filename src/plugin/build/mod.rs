@@ -13,12 +13,14 @@ use tracing::{debug, error, info};
 mod cargo;
 
 /// Build plugin packages.
-///
-/// THis command generates a file named `plugin-name.platform.swc-pkg.tar.gz`.
 #[derive(Debug, StructOpt)]
 pub struct BuildCommand {
     #[structopt(flatten)]
     pub cargo: BaseCargoBuildCommand,
+
+    /// Create node package file named `plugin-name.platform.swc-pkg.tar.gz`.
+    #[structopt(long)]
+    pub package: bool,
 }
 
 impl BuildCommand {
