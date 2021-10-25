@@ -100,7 +100,10 @@ impl BuildCommand {
                 )
                 .context("failed to create package for the built platform")?;
 
-                create_npm_package(&pkg_dir).context("failed to create npm package")?;
+                let pkg_file =
+                    create_npm_package(&pkg_dir).context("failed to create npm package")?;
+
+                info!("Created package file at `{}`", pkg_file.display());
             }
         }
 

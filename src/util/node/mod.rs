@@ -1,7 +1,7 @@
 use anyhow::{Context, Error};
 use std::{
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
 };
 
 pub mod platform;
@@ -12,7 +12,12 @@ pub fn create_npm_package(cwd: &Path) -> Result<PathBuf, Error> {
     cmd.current_dir(&cwd);
     cmd.arg("pack");
 
-    let status = cmd.status().context("failed to spawn `npm package`")?;
+    let output = cmd
+        .stderr(Stdio::inherit())
+        .output()
+        .context("failed to spawn `npm package`")?;
 
-    panic!("Not implemented yet")
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
+    Ok(cwd.join(stdout.trim()))
 }
