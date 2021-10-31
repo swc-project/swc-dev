@@ -13,7 +13,7 @@ use tracing::info;
 /// Publish package for each platforms and patch package.json to include
 /// `optionalDependencies`
 #[derive(Debug, StructOpt)]
-pub struct ArtifactsCommand {
+pub struct PublishDepsCommand {
     /// Defaults whole crates.
     #[structopt(long)]
     pub crates: Vec<String>,
@@ -23,7 +23,7 @@ pub struct ArtifactsCommand {
     pub artifacts_dir: String,
 }
 
-impl ArtifactsCommand {
+impl PublishDepsCommand {
     pub fn run(self) -> Result<()> {
         let artifacts_dir = if self.artifacts_dir.is_empty() {
             current_dir().context("failed to get current directory")?

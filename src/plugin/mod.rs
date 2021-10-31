@@ -1,5 +1,5 @@
 use self::{
-    artifacts::ArtifactsCommand, build::BuildCommand, init::InitCommand, package::PackageCommand,
+    artifacts::PublishDepsCommand, build::BuildCommand, init::InitCommand, package::PackageCommand,
     upgrade_deps::UpgradeDepsCommand,
 };
 use anyhow::{Context, Error};
@@ -17,7 +17,7 @@ pub enum PluginCommand {
     Init(InitCommand),
     Build(BuildCommand),
     Package(PackageCommand),
-    Artifacts(ArtifactsCommand),
+    PublishDeps(PublishDepsCommand),
     UpgradeDeps(UpgradeDepsCommand),
 }
 
@@ -33,7 +33,7 @@ impl PluginCommand {
             PluginCommand::Package(cmd) => {
                 cmd.run()?;
             }
-            PluginCommand::Artifacts(cmd) => {
+            PluginCommand::PublishDeps(cmd) => {
                 cmd.run()?;
             }
             PluginCommand::UpgradeDeps(cmd) => {
