@@ -24,29 +24,32 @@ pub fn cargo_metadata(mut cmd: MetadataCommand, from: &Path) -> Result<cargo_met
 ///
 /// Returns `(name, manifest_dir)`
 pub fn get_all_crates() -> Result<Vec<(String, PathBuf)>> {
-    let mut cmd = MetadataCommand::new();
-    cmd.no_deps();
+    (|| -> Result<_> {
+        let mut cmd = MetadataCommand::new();
+        cmd.no_deps();
 
-    let md = cargo_metadata(cmd, &env::current_dir()?)?;
-    let ws_pkgs = md.workspace_members;
+        let md = cargo_metadata(cmd, &env::current_dir()?)?;
+        let ws_pkgs = md.workspace_members;
 
-    Ok(md
-        .packages
-        .into_iter()
-        .filter_map(|p| {
-            if !ws_pkgs.contains(&p.id) {
-                return None;
-            }
+        Ok(md
+            .packages
+            .into_iter()
+            .filter_map(|p| {
+                if !ws_pkgs.contains(&p.id) {
+                    return None;
+                }
 
-            let manifest_dir = p
-                .manifest_path
-                .parent()
-                .unwrap()
-                .to_path_buf()
-                .into_std_path_buf();
-            Some((p.name, manifest_dir))
-        })
-        .collect())
+                let manifest_dir = p
+                    .manifest_path
+                    .parent()
+                    .unwrap()
+                    .to_path_buf()
+                    .into_std_path_buf();
+                Some((p.name, manifest_dir))
+            })
+            .collect())
+    })()
+    .context("failed to get members of the cargo workspace")
 }
 
 pub fn swc_output_dir() -> Result<PathBuf> {
