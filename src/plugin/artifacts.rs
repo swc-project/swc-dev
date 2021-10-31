@@ -108,7 +108,7 @@ impl PublishDepsCommand {
             ))?;
 
             for platform in pkg_platforms.iter() {
-                let platform_pkg_filename = format!("{}-{}.swc-pkg.tgz", crate_name, platform);
+                let platform_pkg_filename = format!("{}.{}.swc-pkg.tgz", crate_name, platform);
 
                 publish_tarball_to_npm(Path::new(&platform_pkg_filename)).with_context(|| {
                     format!(
