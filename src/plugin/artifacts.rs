@@ -1,4 +1,4 @@
-use crate::util::{cargo::get_all_crates, AHashMap};
+use crate::util::{cargo::get_all_crates, node::publish_tarball_to_npm, AHashMap};
 use anyhow::{bail, Context, Result};
 use serde_json::Value;
 use std::{
@@ -59,6 +59,11 @@ impl ArtifactsCommand {
             if !base_package_json.is_object() {
                 bail!("package.json is not an object")
             }
+
+            let pkg_platforms = all_pkg_platforms.get(&crate_name).with_context(|| {
+                format!("failed to get package files for crate `{}`", crate_name)
+            })?;
+
             {
                 let pkg_json_obj = base_package_json.as_object_mut().unwrap();
 
@@ -88,11 +93,7 @@ impl ArtifactsCommand {
                     .as_object_mut()
                     .unwrap();
 
-                let pkg_platforms = all_pkg_platforms.get(&crate_name).with_context(|| {
-                    format!("failed to get package files for crate `{}`", crate_name)
-                })?;
-
-                for platform in pkg_platforms {
+                for platform in pkg_platforms.iter() {
                     let dep_name = format!("{}-{}", pkg_name, platform);
                     if !opt_deps.contains_key(&dep_name) {
                         opt_deps.insert(dep_name, Value::String(pkg_version.clone()));
@@ -105,6 +106,17 @@ impl ArtifactsCommand {
                 "failed to write to `{}`",
                 base_package_json_path.display()
             ))?;
+
+            for platform in pkg_platforms.iter() {
+                let platform_pkg_filename = format!("{}-{}.swc-pkg.tgz", crate_name, platform);
+
+                publish_tarball_to_npm(Path::new(&platform_pkg_filename)).with_context(|| {
+                    format!(
+                        "failed to publish platform package for `{}` (target = {})",
+                        crate_name, platform
+                    )
+                })?;
+            }
         }
 
         todo!()
