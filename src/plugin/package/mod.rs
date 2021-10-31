@@ -39,7 +39,7 @@ impl PackageCommand {
 
         let crate_names = if crate_names.is_empty() {
             info!("Using all crates in the workspace because `--crates` is not used");
-            get_all_crates()?
+            get_all_crates()?.into_iter().map(|c| c.0).collect()
         } else {
             crate_names
         };

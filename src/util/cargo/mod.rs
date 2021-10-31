@@ -21,7 +21,9 @@ pub fn cargo_metadata(mut cmd: MetadataCommand, from: &Path) -> Result<cargo_met
 }
 
 /// Get all crate in cargo workspace.
-pub fn get_all_crates() -> Result<Vec<String>> {
+///
+/// Returns `(name, manifest_dir)`
+pub fn get_all_crates() -> Result<Vec<(String, PathBuf)>> {
     let mut cmd = MetadataCommand::new();
     cmd.no_deps();
 
@@ -36,7 +38,13 @@ pub fn get_all_crates() -> Result<Vec<String>> {
                 return None;
             }
 
-            Some(p.name)
+            let manifest_dir = p
+                .manifest_path
+                .parent()
+                .unwrap()
+                .to_path_buf()
+                .into_std_path_buf();
+            Some((p.name, manifest_dir))
         })
         .collect())
 }
