@@ -20,6 +20,7 @@ pub fn cargo_metadata(mut cmd: MetadataCommand, from: &Path) -> Result<cargo_met
     Ok(result)
 }
 
+/// Get all crate in cargo workspace.
 pub fn get_all_crates() -> Result<Vec<String>> {
     let mut cmd = MetadataCommand::new();
     cmd.no_deps();
