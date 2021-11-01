@@ -30,15 +30,21 @@ jobs:
         run: |
           cargo build --release
 
-      - name: Rename
+      - name: Rename (Unix)
+        if: runner.os != 'Windows'
         run: |
           mv target/release/swc-dev swc-dev-${{ runner.os }}
+
+      - name: Rename (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mv target/release/swc-dev.exe swc-dev-${{ runner.os }}.exe
 
       - name: Upload built binary
         uses: actions/upload-artifact@v2
         with:
           name: cli-files
-          path: swc-dev-${{ runner.os }}
+          path: swc-dev-*
 
   publish:
     name: Publish
