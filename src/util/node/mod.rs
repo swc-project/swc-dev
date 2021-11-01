@@ -33,7 +33,7 @@ pub fn create_npm_package(cwd: &Path) -> Result<PathBuf> {
     Ok(cwd.join(stdout.trim()))
 }
 
-pub fn publish_tarball_to_npm(path: &Path) -> Result<()> {
+pub fn publish_tarball_to_npm(path: &Path, access: Option<&str>) -> Result<()> {
     let npm_path =
         find_executable("npm").ok_or_else(|| anyhow!("failed to find `npm` from path"))?;
 
@@ -46,6 +46,9 @@ pub fn publish_tarball_to_npm(path: &Path) -> Result<()> {
     };
 
     cmd.arg("publish").arg(&path);
+    if let Some(access) = access {
+        cmd.arg("--access").arg(access);
+    }
 
     let output = cmd.status().context("failed to spawn `npm publish`")?;
 

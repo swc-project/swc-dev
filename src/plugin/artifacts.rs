@@ -21,6 +21,9 @@ pub struct PublishDepsCommand {
     /// Defaults to current working directory.
     #[structopt(long, default_value)]
     pub artifacts_dir: String,
+
+    #[structopt(long)]
+    pub access: Option<String>,
 }
 
 impl PublishDepsCommand {
@@ -32,6 +35,7 @@ impl PublishDepsCommand {
         };
 
         let enabled_crates = self.crates;
+        let access = self.access;
 
         let crates = get_all_crates()?
             .into_iter()
@@ -110,14 +114,16 @@ impl PublishDepsCommand {
             for platform in pkg_platforms.iter() {
                 let platform_pkg_filename = format!("{}.{}.swc-pkg.tgz", crate_name, platform);
 
-                publish_tarball_to_npm(&artifacts_dir.join(&platform_pkg_filename)).with_context(
-                    || {
-                        format!(
-                            "failed to publish platform package for `{}` (target = {})",
-                            crate_name, platform
-                        )
-                    },
-                )?;
+                publish_tarball_to_npm(
+                    &artifacts_dir.join(&platform_pkg_filename),
+                    access.as_deref(),
+                )
+                .with_context(|| {
+                    format!(
+                        "failed to publish platform package for `{}` (target = {})",
+                        crate_name, platform
+                    )
+                })?;
             }
         }
 
