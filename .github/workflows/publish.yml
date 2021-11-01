@@ -1,0 +1,71 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - v*
+
+env:
+  RUST_LOG: debug
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    name: Build - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+
+      - name: Build
+        run: |
+          cargo build --release
+
+      - name: Rename (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mv target/release/swc-dev swc-dev-${{ runner.os }}
+
+      - name: Rename (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mv target/release/swc-dev.exe swc-dev-${{ runner.os }}.exe
+
+      - name: Upload built binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: cli-files
+          path: swc-dev-*
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          path: built
+          name: cli-files
+
+      - name: List files
+        run: ls -R built
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            built/swc-dev-Linux
+            built/swc-dev-Windows.exe
+            built/swc-dev-macOS
