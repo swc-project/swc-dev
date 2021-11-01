@@ -33,5 +33,20 @@ jobs:
       - name: Upload built binary
         uses: actions/upload-artifact@v2
         with:
-          name: cli
+          name: cli-files
           path: target/release/swd
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: cli-files
+
+      - name: List files
+        run: ls -R
