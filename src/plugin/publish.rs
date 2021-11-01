@@ -127,7 +127,6 @@ impl PublishDepsCommand {
             }
         }
 
-
         Ok(())
     }
 }

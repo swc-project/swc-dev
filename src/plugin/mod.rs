@@ -1,14 +1,14 @@
 use self::{
-    artifacts::PublishDepsCommand, build::BuildCommand, init::InitCommand, package::PackageCommand,
+    build::BuildCommand, init::InitCommand, package::PackageCommand, publish::PublishDepsCommand,
     upgrade_deps::UpgradeDepsCommand,
 };
 use anyhow::{Context, Error};
 use structopt::StructOpt;
 
-pub mod artifacts;
 pub mod build;
 pub mod init;
 pub mod package;
+pub mod publish;
 pub mod upgrade_deps;
 
 /// Manages the plugin. Used for developing plugins.
