@@ -34,35 +34,6 @@ pub fn create_npm_package(cwd: &Path) -> Result<PathBuf> {
     Ok(cwd.join(stdout.trim()))
 }
 
-pub fn publish_dir_to_npm(dir: &Path, access: Option<&str>) -> Result<()> {
-    info!("Publishing node package at {}", dir.display());
-
-    let npm_path =
-        find_executable("npm").ok_or_else(|| anyhow!("failed to find `npm` from path"))?;
-
-    let mut cmd = if cfg!(target_os = "windows") {
-        let mut c = Command::new("cmd");
-        c.arg("/C").arg(&npm_path);
-        c
-    } else {
-        Command::new(npm_path)
-    };
-    cmd.current_dir(&dir);
-
-    cmd.arg("publish");
-    if let Some(access) = access {
-        cmd.arg("--access").arg(access);
-    }
-
-    let output = cmd.status().context("failed to spawn `npm publish`")?;
-
-    if !output.success() {
-        bail!("`npm publish` for `{}` failed", dir.display())
-    }
-
-    Ok(())
-}
-
 pub fn publish_tarball_to_npm(path: &Path, access: Option<&str>) -> Result<()> {
     info!("Publishing platform package at {}", path.display());
 
