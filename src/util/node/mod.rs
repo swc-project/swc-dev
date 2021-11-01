@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
+use tracing::info;
 
 pub mod platform;
 
@@ -34,6 +35,8 @@ pub fn create_npm_package(cwd: &Path) -> Result<PathBuf> {
 }
 
 pub fn publish_tarball_to_npm(path: &Path, access: Option<&str>) -> Result<()> {
+    info!("Publishing platform package at {}", path.display());
+
     let npm_path =
         find_executable("npm").ok_or_else(|| anyhow!("failed to find `npm` from path"))?;
 
