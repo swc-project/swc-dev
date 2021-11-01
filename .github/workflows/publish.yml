@@ -25,3 +25,13 @@ jobs:
         with:
           profile: minimal
           override: true
+
+      - name: Build
+        run: |
+          cargo build --release
+
+      - name: Upload built binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: cli
+          path: target/release/swd
