@@ -61,3 +61,12 @@ jobs:
 
       - name: List files
         run: ls -R built
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        # if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            built/swc-dev-Linux
+            built/swc-dev-Windows.exe
+            built/swc-dev-macOS
