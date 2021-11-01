@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: cli-files
-          path: target/release/swd
+          path: target/release/swc-dev
 
   publish:
     name: Publish
