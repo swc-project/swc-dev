@@ -1,3 +1,4 @@
+use self::base::BasePublishCommand;
 use crate::util::{cargo::get_all_crates, node::publish_tarball_to_npm, AHashMap};
 use anyhow::{bail, Context, Result};
 use serde_json::Value;
@@ -10,20 +11,17 @@ use std::{
 use structopt::StructOpt;
 use tracing::info;
 
+mod base;
+
 /// Publish package for each platforms and patch package.json to include
 /// `optionalDependencies`
 #[derive(Debug, StructOpt)]
 pub struct PublishDepsCommand {
-    /// Defaults whole crates.
-    #[structopt(long)]
-    pub crates: Vec<String>,
-
+    #[structopt(flatten)]
+    pub base: BasePublishCommand,
     /// Defaults to current working directory.
     #[structopt(long, default_value)]
     pub artifacts_dir: String,
-
-    #[structopt(long)]
-    pub access: Option<String>,
 }
 
 impl PublishDepsCommand {
@@ -34,8 +32,8 @@ impl PublishDepsCommand {
             PathBuf::from(self.artifacts_dir)
         };
 
-        let enabled_crates = self.crates;
-        let access = self.access;
+        let enabled_crates = self.base.crates;
+        let access = self.base.access;
 
         let crates = get_all_crates()?
             .into_iter()
