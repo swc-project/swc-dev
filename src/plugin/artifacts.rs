@@ -127,7 +127,8 @@ impl PublishDepsCommand {
             }
         }
 
-        todo!()
+
+        Ok(())
     }
 }
 
