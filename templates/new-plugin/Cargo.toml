@@ -1,0 +1,10 @@
+[package]
+edition = "2018"
+name = "swc-plugin-template"
+publish = false
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
