@@ -56,7 +56,8 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
+          path: built
           name: cli-files
 
       - name: List files
-        run: ls -R
+        run: ls -R built
