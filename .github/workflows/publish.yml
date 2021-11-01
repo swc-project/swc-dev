@@ -1,0 +1,27 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+      - ci
+
+env:
+  RUST_LOG: debug
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    name: Build - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
