@@ -1,12 +1,8 @@
-# swd
+# swc-dev
 
-# Usage
+# Installation
 
-```sh
-# Dependency
-cargo install cargo-edit
-cargo install swd
-```
+`swc-dev` provides prebuilt binaries for linux / mac os x / windows.
 
 ## Managing plugins
 
