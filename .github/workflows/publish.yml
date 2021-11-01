@@ -32,13 +32,13 @@ jobs:
 
       - name: Rename
         run: |
-          mv target/release/swc-dev ${{ runner.os }}
+          mv target/release/swc-dev swc-dev-${{ runner.os }}
 
       - name: Upload built binary
         uses: actions/upload-artifact@v2
         with:
           name: cli-files
-          path: target/release/swc-dev
+          path: swc-dev-${{ runner.os }}
 
   publish:
     name: Publish
